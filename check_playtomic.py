@@ -1,14 +1,14 @@
 import requests
 
-url = "https://playtomic.com/clubs/tc-ranst"
+url = "https://playtomic.io/api/v1/availability"
 
-headers = {
-    "User-Agent": "Mozilla/5.0"
+params = {
+    "sport_id": 2
 }
 
-response = requests.get(url, headers=headers)
-
-if "Book" in response.text:
-    print("Er is mogelijk een court beschikbaar!")
-else:
-    print("Geen courts gevonden.")
+try:
+    r = requests.get(url, params=params)
+    print("Status:", r.status_code)
+    print("Response:", r.text[:500])
+except Exception as e:
+    print("Error:", e)
