@@ -1,14 +1,17 @@
 import requests
 import datetime
 
-club_id = 1  # tijdelijk test-id
+tenant_id = "2b0af113-70a9-4ad2-a54c-b0bcf20f596b"
+sport_id = 2
+
 date = datetime.date.today().isoformat()
 
 url = "https://api.playtomic.io/v1/availability"
 
 params = {
-    "date": date,
-    "sport_id": 2
+    "tenant_id": tenant_id,
+    "sport_id": sport_id,
+    "date": date
 }
 
 headers = {
@@ -16,16 +19,7 @@ headers = {
     "Accept": "application/json"
 }
 
-try:
-    r = requests.get(url, params=params, headers=headers)
+r = requests.get(url, params=params, headers=headers)
 
-    print("Status:", r.status_code)
-
-    if "application/json" in r.headers.get("Content-Type",""):
-        print("JSON data gevonden")
-        print(r.text[:800])
-    else:
-        print("Geen JSON ontvangen")
-
-except Exception as e:
-    print("Error:", e)
+print("Status:", r.status_code)
+print("Response:", r.text[:1000])
