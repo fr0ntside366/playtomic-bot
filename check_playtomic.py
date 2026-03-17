@@ -3,15 +3,7 @@ import datetime
 
 tenant_id = "2b0af113-70a9-4ad2-a54c-b0bcf20f596b"
 
-date = datetime.date.today().isoformat()
-
 url = "https://playtomic.com/api/clubs/availability"
-
-params = {
-    "tenant_id": tenant_id,
-    "date": date,
-    "sport_id": "PADEL"
-}
 
 headers = {
     "User-Agent": "Mozilla/5.0",
@@ -20,13 +12,37 @@ headers = {
     "Referer": "https://playtomic.com/"
 }
 
-response = requests.get(url, params=params, headers=headers)
-data = response.json()
+today = datetime.date.today()
 
-for court in data:
-    for slot in court.get("slots", []):
+for i in range(7):
 
-        start = slot.get("start_time")
+    date = (today + datetime.timedelta(days=i)).isoformat()
 
-        if slot.get("available") and start >= "19:00" and start <= "22:00":
-            print("⚠ Court vrij:", court.get("name"), start)
+    params = {
+        "tenant_id": tenant_id,
+        "date": date,
+        "sport_id": "PADEL"
+    }
+
+    response = requests.get(url, params=params, headers=headers)
+
+    print("Checking date:", date)
+    print("Status:", response.status_code)
+
+    data = response.json()
+
+    courts_found = False
+
+    for court in data:
+        for slot in court.get("slots", []):
+
+            start = slot.get("start_time")
+
+            if slot.get("available") and start >= "18:00" and start <= "22:00":
+                courts_found = True
+                print("⚠ Court vrij:", date, court.get("name"), start)
+
+    if not courts_found:
+        print("Geen vrije courts gevonden op", date)
+
+    print("-------------")
