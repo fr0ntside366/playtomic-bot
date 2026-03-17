@@ -3,7 +3,6 @@ import datetime
 import smtplib
 import os
 import json
-from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 tenant_id = "2b0af113-70a9-4ad2-a54c-b0bcf20f596b"
@@ -19,7 +18,7 @@ headers = {
 
 STATE_FILE = "seen_slots.json"
 
-TARGET_TIMES = [
+ALLOWED_TIMES = [
     "19:00:00",
     "19:30:00",
     "20:00:00",
@@ -39,41 +38,16 @@ def save_seen(seen):
         json.dump(list(seen), f)
 
 
-def send_email(date, start, price, link):
+def send_email(subject, html):
 
     sender = os.environ["EMAIL_USER"]
     password = os.environ["EMAIL_PASS"]
 
-    subject = "🎾 Padel court vrij!"
+    msg = MIMEText(html, "html")
 
-    html = f"""
-    <html>
-    <body style="font-family: Arial">
-
-    <h2>🎾 Padel court vrij!</h2>
-
-    <p><b>Datum:</b> {date}</p>
-    <p><b>Tijd:</b> {start}</p>
-    <p><b>Prijs:</b> {price}</p>
-
-    <p>
-    <a href="{link}" 
-       style="background:#28a745;color:white;padding:12px 18px;
-       text-decoration:none;border-radius:6px;">
-       Boek nu op Playtomic
-    </a>
-    </p>
-
-    </body>
-    </html>
-    """
-
-    msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
     msg["From"] = sender
     msg["To"] = sender
-
-    msg.attach(MIMEText(html, "html"))
 
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
         server.login(sender, password)
@@ -100,31 +74,61 @@ data = response.json()
 
 for court in data:
 
+    court_id = court.get("resource_id")
+    court_name = court.get("name", "Onbekend veld")
+
     for slot in court.get("slots", []):
 
         start = slot.get("start_time")
-        duration = slot.get("duration")
         price = slot.get("price")
+        duration = slot.get("duration")
+        slot_uuid = slot.get("uuid")
 
         if not price:
-            continue
-
-        if start not in TARGET_TIMES:
             continue
 
         if duration != 90:
             continue
 
-        slot_id = f"{target_date}_{start}_{court['resource_id']}"
+        if start not in ALLOWED_TIMES:
+            continue
+
+        slot_id = f"{target_date}_{start}_{court_id}"
 
         if slot_id in seen_slots:
             continue
 
-        booking_link = f"https://playtomic.com/en/book/club/{tenant_id}?date={target_date}"
+        # DIRECTE BOOKING LINK
+        booking_link = f"https://playtomic.com/en/book/club/{tenant_id}/slot/{slot_uuid}"
 
-        print("Court gevonden:", start)
+        html = f"""
+        <h2>🎾 Padel court vrij!</h2>
 
-        send_email(target_date, start, price, booking_link)
+        <b>Court:</b> {court_name}<br>
+        <b>Datum:</b> {target_date}<br>
+        <b>Tijd:</b> {start}<br>
+        <b>Duur:</b> 90 minuten<br>
+        <b>Prijs:</b> {price}<br><br>
+
+        <a href="{booking_link}" 
+        style="
+        background:#28a745;
+        padding:14px 22px;
+        color:white;
+        text-decoration:none;
+        border-radius:6px;
+        font-size:16px;
+        ">
+        👉 Direct boeken
+        </a>
+        """
+
+        print("Court gevonden:", court_name, start)
+
+        send_email(
+            "🎾 Padel court beschikbaar!",
+            html
+        )
 
         seen_slots.add(slot_id)
 
