@@ -1,6 +1,5 @@
 name: Playtomic Checker
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 on:
   schedule:
     - cron: "*/2 * * * *"
@@ -19,12 +18,11 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install packages
-        run: |
-          pip install requests beautifulsoup4
+      - name: Install dependencies
+        run: pip install requests
 
       - name: Run script
-      env:
-    EMAIL_USER: ${{ secrets.EMAIL_USER }}
-    EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+        env:
+          EMAIL_USER: ${{ secrets.EMAIL_USER }}
+          EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
         run: python check_playtomic.py
