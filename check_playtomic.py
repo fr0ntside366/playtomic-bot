@@ -28,22 +28,28 @@ for i in range(7):
 
     print("Checking date:", date)
     print("Status:", response.status_code)
-    print(response.text[:2000])
 
     data = response.json()
 
-    courts_found = False
+    found = False
 
     for court in data:
+
         for slot in court.get("slots", []):
 
             start = slot.get("start_time")
+            price = slot.get("price")
 
-            if slot.get("available") and start >= "18:00" and start <= "22:00":
-                courts_found = True
-                print("⚠ Court vrij:", date, court.get("name"), start)
+            if price:
 
-    if not courts_found:
+                hour = int(start.split(":")[0])
+
+                if 18 <= hour <= 22:
+
+                    found = True
+                    print("⚠ Court vrij:", date, start, price)
+
+    if not found:
         print("Geen vrije courts gevonden op", date)
 
-    print("-------------")
+    print("------")
