@@ -22,13 +22,13 @@ headers = {
 
 response = requests.get(url, params=params, headers=headers)
 
-data = response.json()
-
 print("Status:", response.status_code)
+
+data = response.json()
 
 courts_found = False
 
-for court in data.get("courts", []):
+for court in data:
     for slot in court.get("slots", []):
         if slot.get("available"):
             courts_found = True
