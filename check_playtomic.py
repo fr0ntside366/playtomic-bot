@@ -15,10 +15,24 @@ params = {
 
 headers = {
     "User-Agent": "Mozilla/5.0",
-    "Accept": "application/json"
+    "Accept": "application/json",
+    "Origin": "https://playtomic.com",
+    "Referer": "https://playtomic.com/"
 }
 
 response = requests.get(url, params=params, headers=headers)
 
+data = response.json()
+
 print("Status:", response.status_code)
-print("Response:", response.text[:1000])
+
+courts_found = False
+
+for court in data.get("courts", []):
+    for slot in court.get("slots", []):
+        if slot.get("available"):
+            courts_found = True
+            print("Court vrij:", court.get("name"), slot.get("start_time"))
+
+if not courts_found:
+    print("Geen vrije courts gevonden.")
