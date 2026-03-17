@@ -1,12 +1,14 @@
 import requests
-from bs4 import BeautifulSoup
 
-url = "https://playtomic.io"
+url = "https://playtomic.com/clubs/tc-ranst"
 
-response = requests.get(url)
-soup = BeautifulSoup(response.text, "html.parser")
+headers = {
+    "User-Agent": "Mozilla/5.0"
+}
 
-if "Book" in soup.text:
-    print("Court mogelijk beschikbaar!")
+response = requests.get(url, headers=headers)
+
+if "Book" in response.text:
+    print("Er is mogelijk een court beschikbaar!")
 else:
     print("Geen courts gevonden.")
