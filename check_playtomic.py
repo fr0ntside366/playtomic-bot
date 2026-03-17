@@ -6,9 +6,14 @@ params = {
     "sport_id": 2
 }
 
+headers = {
+    "User-Agent": "Mozilla/5.0"
+}
+
 try:
-    r = requests.get(url, params=params)
-    print("Status:", r.status_code)
-    print("Response:", r.text[:500])
+    response = requests.get(url, params=params, headers=headers)
+    print("Status:", response.status_code)
+    print("Data:", response.text[:800])
+
 except Exception as e:
     print("Error:", e)
