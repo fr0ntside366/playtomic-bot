@@ -21,18 +21,12 @@ headers = {
 }
 
 response = requests.get(url, params=params, headers=headers)
-
-print("Status:", response.status_code)
-
 data = response.json()
-
-courts_found = False
 
 for court in data:
     for slot in court.get("slots", []):
-        if slot.get("available"):
-            courts_found = True
-            print("Court vrij:", court.get("name"), slot.get("start_time"))
 
-if not courts_found:
-    print("Geen vrije courts gevonden.")
+        start = slot.get("start_time")
+
+        if slot.get("available") and start >= "19:00" and start <= "22:00":
+            print("⚠ Court vrij:", court.get("name"), start)
