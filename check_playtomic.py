@@ -20,16 +20,13 @@ STATE_FILE = "seen_slots.json"
 
 
 def load_seen():
-
     if os.path.exists(STATE_FILE):
         with open(STATE_FILE) as f:
             return set(json.load(f))
-
     return set()
 
 
 def save_seen(seen):
-
     with open(STATE_FILE, "w") as f:
         json.dump(list(seen), f)
 
@@ -41,7 +38,7 @@ def send_email(msg):
 
     message = MIMEText(msg)
 
-    message["Subject"] = "⚠ Padel court vrij!"
+    message["Subject"] = "🎾 Padel court vrij!"
     message["From"] = sender
     message["To"] = sender
 
@@ -54,53 +51,57 @@ seen_slots = load_seen()
 
 today = datetime.date.today()
 
-for i in range(7):
+# EXACT 7 dagen vooruit
+target_date = (today + datetime.timedelta(days=7)).isoformat()
 
-    date = (today + datetime.timedelta(days=i)).isoformat()
+params = {
+    "tenant_id": tenant_id,
+    "date": target_date,
+    "sport_id": "PADEL"
+}
 
-    params = {
-        "tenant_id": tenant_id,
-        "date": date,
-        "sport_id": "PADEL"
-    }
+response = requests.get(url, params=params, headers=headers)
 
-    response = requests.get(url, params=params, headers=headers)
+print("Checking date:", target_date)
 
-    print("Checking date:", date)
+data = response.json()
 
-    data = response.json()
+for court in data:
 
-    for court in data:
+    for slot in court.get("slots", []):
 
-        for slot in court.get("slots", []):
+        start = slot.get("start_time")
+        price = slot.get("price")
 
-            start = slot.get("start_time")
-            price = slot.get("price")
+        if not price:
+            continue
 
-            if not price:
-                continue
+        hour = int(start.split(":")[0])
 
-            hour = int(start.split(":")[0])
+        if hour < 19:
+            continue
 
-            if hour < 18 or hour > 22:
-                continue
+        slot_id = f"{target_date}_{start}_{court['resource_id']}"
 
-            slot_id = f"{date}_{start}_{court['resource_id']}"
+        if slot_id not in seen_slots:
 
-            if slot_id not in seen_slots:
+            booking_link = f"https://playtomic.com/en/book/club/{tenant_id}?date={target_date}"
 
-                msg = f"""
+            msg = f"""
 Padel court vrij!
 
-Datum: {date}
+Datum: {target_date}
 Tijd: {start}
 Prijs: {price}
+
+Boeken:
+{booking_link}
 """
 
-                print(msg)
+            print(msg)
 
-                send_email(msg)
+            send_email(msg)
 
-                seen_slots.add(slot_id)
+            seen_slots.add(slot_id)
 
 save_seen(seen_slots)
