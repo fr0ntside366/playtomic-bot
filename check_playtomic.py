@@ -28,6 +28,7 @@ for i in range(7):
 
     print("Checking date:", date)
     print("Status:", response.status_code)
+    print(response.text[:2000])
 
     data = response.json()
 
